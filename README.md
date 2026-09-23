@@ -113,6 +113,39 @@ Test chính của G2 là:
 Kết quả đã xác nhận: `3 passed`, bao gồm kiểm tra exhaustive 100 vòng và
 kiểm tra đủ 1008 giá trị PCI.
 
+## Demo trực quan G2
+
+Pytest là bằng chứng tự động, nhưng output của nó chỉ là trạng thái pass/fail.
+Để có kết quả nhìn thấy được trong báo cáo, chạy:
+
+```bash
+.venv/bin/python experiments/demo_noiseless.py
+```
+
+Lệnh này sẽ:
+
+- kiểm tra lại toàn bộ PSS, SSS và PCI trong môi trường noiseless;
+- in báo cáo theo từng tiêu chí thay vì chỉ hiện dấu chấm pytest;
+- tạo `results/g2_noiseless_report.png` với 4 biểu đồ: PSS, SSS, ánh xạ PCI
+	và trạng thái kiểm thử;
+- tạo `results/g2_noiseless_report.json` để lưu số liệu có thể trích vào báo cáo.
+
+Kết quả mẫu:
+
+```text
+G2 NOISELESS DEMO
+============================================================
+PSS:           3/3 unique sequences ........ PASS
+SSS:           1008/1008 cases ........ PASS
+PCI:           1008/1008 values ................. PASS
+Determinism:   100 repetitions ............... PASS
+------------------------------------------------------------
+RESULT: 100% NOISELESS VALIDATION PASSED
+```
+
+Hình PNG sinh ra là artifact để đưa vào slide. Nó chứng minh G2 đã vượt qua
+giai đoạn sinh vector, nhưng chưa phải kết quả Pd của bộ đồng bộ trên waveform.
+
 ## Chạy notebook
 
 Khởi động Jupyter từ thư mục `CODE`:
