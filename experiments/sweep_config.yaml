@@ -1,0 +1,8 @@
+seed: 0
+resume: true
+output_dir: results
+parameters:
+  snr_db: [-10, -5, 0, 5, 10]
+  cfo_hz: [0]
+  delay_samples: [0]
+  repetitions: 100
