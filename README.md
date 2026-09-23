@@ -34,6 +34,22 @@ cấu hình cho các thí nghiệm quét tham số.
 Cổng C1/C3 được kiểm thử trong môi trường lý tưởng, không nhiễu và không CFO.
 Bộ test kiểm tra toàn bộ miền PSS, SSS và PCI trong tối thiểu 100 lần lặp.
 
+## Mục tiêu demo hiện tại có ý nghĩa gì?
+
+Mục tiêu “chạy pytest trực tiếp và đạt 100% trong kịch bản Noiseless” là một
+cổng kiểm tra nền tảng, chưa phải toàn bộ hệ thống đồng bộ hóa. Nó chứng minh
+rằng phần sinh vector ban đầu đã đúng và ổn định:
+
+1. Mỗi `N_ID^2` tạo ra đúng một PSS dài 127.
+2. Mỗi cặp `N_ID^1, N_ID^2` tạo ra đúng một SSS dài 127.
+3. Công thức PCI phủ đủ 1008 giá trị.
+4. Cùng input luôn cho cùng output trong 100 lần lặp.
+
+Nó chưa chứng minh bộ thu đã tìm được timing từ waveform thực tế. Để đạt mục
+tiêu cuối của đồ án, cần phát triển tiếp theo thứ tự: OFDM và CP, kênh AWGN/
+đa đường/Doppler/CFO, bộ phát hiện A0-A2, sau đó mới đo Pd/Pfa/RMSE và chạy
+sweep. Mỗi bước cần thêm test trước khi chuyển sang bước kế tiếp.
+
 ## Cấu trúc thư mục
 
 ```text
@@ -85,21 +101,13 @@ source .venv/bin/activate
 Chạy toàn bộ test:
 
 ```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q
-```
-
-`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` giúp loại các plugin pytest hệ thống không
-liên quan nếu máy đã cài ROS hoặc plugin bên ngoài. Trong môi trường sạch,
-có thể chạy ngắn gọn:
-
-```bash
-.venv/bin/python -m pytest -q
+.venv/bin/pytest -q
 ```
 
 Test chính của G2 là:
 
 ```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q tests/test_module_structure.py
+.venv/bin/pytest -q tests/test_module_structure.py
 ```
 
 Kết quả đã xác nhận: `3 passed`, bao gồm kiểm tra exhaustive 100 vòng và
@@ -128,7 +136,13 @@ resume; phần mô phỏng chi tiết sẽ được nối vào các module ở c
 ```bash
 cd CODE
 source .venv/bin/activate
-python -m pytest -q
+pytest -q
+```
+
+Nếu đã cài dependency trước khi cập nhật README, cài lại pytest tương thích:
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 ## Tài liệu tham chiếu
