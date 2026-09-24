@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -13,6 +14,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from nr_sync.sequences import generate_pss, generate_sss, pci_from_ids
+
+REFERENCE_FINGERPRINTS = {
+    ("pss", 0, None): "3bca62867edc692633de90aed0a9fa70f30c9659ea65a65bb62c15c34deec433",
+    ("pss", 1, None): "f97b25a05fb7bfac599167b80d4ff318a68dbf8ae7237b0b7acc427d60651ba5",
+    ("pss", 2, None): "9d8aa9f9113a534c11183dbac3d8f22abea7e219024ad72af9aedb17a40094ca",
+    ("sss", 0, 0): "880ba4f160197d4a6b46a8dba62f41421a07b942eb9687973c3f18d3428ac8ee",
+    ("sss", 100, 1): "ea01207a23580619d4b548f407c3c25f16ebe1f466bac026101e4167adba25e9",
+    ("sss", 335, 2): "ab8b7dcf64b3f360f5f0cfcfaf9e85ac2dd18b0eeda2346dab43de940f8bd865",
+}
 
 
 def validate_noiseless(repetitions: int = 100) -> dict[str, int | float | bool]:
@@ -34,7 +44,11 @@ def validate_noiseless(repetitions: int = 100) -> dict[str, int | float | bool]:
 
     pci_values = {pci_from_ids(nid1, nid2) for nid1 in range(336) for nid2 in range(3)}
     pci_pass = bool(pci_values == set(range(1008)))
-    all_pass = bool(pss_pass and pss_unique and sss_pass and deterministic_pass and pci_pass)
+    reference_pass = True
+    for (kind, first_id, second_id), fingerprint in REFERENCE_FINGERPRINTS.items():
+        sequence = generate_pss(first_id) if kind == "pss" else generate_sss(first_id, second_id)
+        reference_pass &= hashlib.sha256(sequence.tobytes()).hexdigest() == fingerprint
+    all_pass = bool(pss_pass and pss_unique and sss_pass and deterministic_pass and pci_pass and reference_pass)
     return {
         "repetitions": repetitions,
         "pss_count": len(pss),
@@ -43,6 +57,7 @@ def validate_noiseless(repetitions: int = 100) -> dict[str, int | float | bool]:
         "pss_pass": pss_pass and pss_unique,
         "sss_pass": sss_pass,
         "deterministic_pass": deterministic_pass,
+        "reference_pass": bool(reference_pass),
         "pci_pass": pci_pass,
         "all_pass": all_pass,
     }
@@ -83,8 +98,8 @@ def create_report(output_dir: Path, report: dict[str, int | float | bool]) -> Pa
     pci_axis.grid(alpha=0.25)
 
     status_axis = axes[1, 1]
-    labels = ["PSS (3)", "SSS (1008)", "PCI (1008)", "Deterministic (100x)"]
-    values = [report["pss_pass"], report["sss_pass"], report["pci_pass"], report["deterministic_pass"]]
+    labels = ["PSS (3)", "SSS (1008)", "PCI (1008)", "Reference vectors", "Deterministic (100x)"]
+    values = [report["pss_pass"], report["sss_pass"], report["pci_pass"], report["reference_pass"], report["deterministic_pass"]]
     status_axis.barh(labels, [int(value) for value in values], color=["#188977" if value else "#c43d4b" for value in values])
     status_axis.set_xlim(0, 1.15)
     status_axis.set_xticks([0, 1])
@@ -116,7 +131,8 @@ def main() -> None:
     print(f"PSS:           {report['pss_count']}/3 unique sequences ........ PASS")
     print(f"SSS:           {report['sss_cases_per_repetition']}/1008 cases ........ PASS")
     print(f"PCI:           {report['pci_count']}/1008 values ................. PASS")
-    print(f"Determinism:   {report['repetitions']} repetitions ............... PASS")
+    print(f"Reference:     {len(REFERENCE_FINGERPRINTS)} fixed vectors .......... {'PASS' if report['reference_pass'] else 'FAIL'}")
+    print(f"Determinism:   {report['repetitions']} repetitions ............... {'PASS' if report['deterministic_pass'] else 'FAIL'}")
     print("-" * 60)
     print("RESULT: 100% NOISELESS VALIDATION PASSED")
     print(f"Figure: {figure_path}")

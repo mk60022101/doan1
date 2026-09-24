@@ -34,6 +34,12 @@ cấu hình cho các thí nghiệm quét tham số.
 Cổng C1/C3 được kiểm thử trong môi trường lý tưởng, không nhiễu và không CFO.
 Bộ test kiểm tra toàn bộ miền PSS, SSS và PCI trong tối thiểu 100 lần lặp.
 
+Điểm quan trọng: chỉ nhìn thấy `3 passed` chưa đủ để kết luận công thức đúng.
+Vì vậy test hiện tại còn có oracle độc lập viết lại recurrence/interleaving
+theo TS 38.211, 6 fingerprint SHA-256 cố định của các vector tham chiếu và
+kiểm tra các input ngoài miền. Nhờ đó, nếu sửa sai công thức nhưng vẫn trả về
+vector dài 127 gồm `+1/-1`, test sẽ thất bại.
+
 ## Mục tiêu demo hiện tại có ý nghĩa gì?
 
 Mục tiêu “chạy pytest trực tiếp và đạt 100% trong kịch bản Noiseless” là một
@@ -113,6 +119,10 @@ Test chính của G2 là:
 Kết quả đã xác nhận: `3 passed`, bao gồm kiểm tra exhaustive 100 vòng và
 kiểm tra đủ 1008 giá trị PCI.
 
+Sau khi bổ sung kiểm tra tham chiếu, kết quả đầy đủ hiện tại là `5 passed`:
+oracle công thức, fingerprint vector, input validation, exhaustive Noiseless
+và PCI coverage.
+
 ## Demo trực quan G2
 
 Pytest là bằng chứng tự động, nhưng output của nó chỉ là trạng thái pass/fail.
@@ -125,6 +135,7 @@ Pytest là bằng chứng tự động, nhưng output của nó chỉ là trạn
 Lệnh này sẽ:
 
 - kiểm tra lại toàn bộ PSS, SSS và PCI trong môi trường noiseless;
+- đối chiếu 6 fingerprint vector cố định để bắt lỗi công thức;
 - in báo cáo theo từng tiêu chí thay vì chỉ hiện dấu chấm pytest;
 - tạo `results/g2_noiseless_report.png` với 4 biểu đồ: PSS, SSS, ánh xạ PCI
 	và trạng thái kiểm thử;
